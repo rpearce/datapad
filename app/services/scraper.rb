@@ -6,30 +6,31 @@ class Scraper
     image: '.infoboximage img',
     summary: '#mw-content-text > p'
   }.freeze
+  START_PAGE = 'http://starwars.wikia.com/wiki/Category:Individuals_by_faction'.freeze
 
   def initialize
     @agent = Mechanize.new { |a| a.user_agent_alias = 'Mac Safari' }
   end
 
   def scrape_on!
-    page = @agent.get('http://starwars.wikia.com/wiki/Category:Individuals_by_faction')
+    page = @agent.get(START_PAGE)
     drill_down(page)
   end
 
-  def drill_down(page)
-    category_links = get_links(page: page, selector: SELECTORS[:category_links])
-    article_links = get_links(page: page, selector: SELECTORS[:article_links]) if category_links.empty?
+  private
 
-    if category_links.empty? && !article_links.empty?
-      article_links.each { |link| drill_down(@agent.get(link)) }
-    elsif category_links.empty? && article_links.empty?
-      create_character(page)
+  def drill_down(page)
+    links = get_links(page, SELECTORS[:category_links])
+    links = get_links(page, SELECTORS[:article_links]) if links.empty?
+
+    if links.present?
+      links.each { |link| drill_down(@agent.get(link)) }
     else
-      category_links.each { |link| drill_down(@agent.get(link)) }
+      create_character(page)
     end
   end
 
-  def get_links(page:, selector:)
+  def get_links(page, selector)
     page.search(selector).map { |a| a['href'] }
   end
 
