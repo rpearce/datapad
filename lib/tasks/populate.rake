@@ -1,5 +1,3 @@
-require 'pry'
-
 namespace :datapad do
   desc 'Populate Data'
   task populate: :environment do
