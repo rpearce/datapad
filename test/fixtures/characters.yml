@@ -1,0 +1,17 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  image: MyString
+  name: MyString
+  homeworld: MyString
+  species: MyString
+  summary: MyText
+  external_uri: MyString
+
+two:
+  image: MyString
+  name: MyString
+  homeworld: MyString
+  species: MyString
+  summary: MyText
+  external_uri: MyString
