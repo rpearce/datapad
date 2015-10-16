@@ -4,7 +4,7 @@ class Api::CharactersController < ApplicationController
       format.json {
         @characters = Character.includes([:affiliations, :character_affiliations])
         @characters = @characters.where('name ILIKE ?', "%#{params[:q]}%") if params[:q]
-        #@characters = @characters.where() if params[:type]
+        @characters = @characters.where(affiliations: { name: params[:type] }) if params[:type]
       }
     end
   end
