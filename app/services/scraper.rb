@@ -40,7 +40,7 @@ class Scraper
   end
 
   def get_image(page)
-    src = page.search(SELECTORS[:image]).first.try(:[], 'src')
+    src = page.search(SELECTORS[:image]).first.try(:[], 'data-src')
     /http/.match(src) ? src : nil
   end
 
@@ -48,8 +48,17 @@ class Scraper
     page.search(SELECTORS[:summary])[0...2].map { |p| p.text.gsub("\n", "") }.join("\n\n")
   end
 
+  def get_specific_data(page, label, fallback)
+    container = page.search(".infoboxlabel:contains('#{label}')").first
+    if container.present?
+      container.parent.text.split(label)[1].gsub("\n","").gsub(/\[.\]/, "")
+    else
+      fallback
+    end
+  end
+
   def create_character(page)
-    infobox = page.search('.infobox').first
+    infobox = page.search('#Character_infobox').first
     if infobox.present?
       affiliations = affiliation_match?(infobox.text)
       if affiliations.present?
@@ -57,6 +66,8 @@ class Scraper
           name: get_name(page),
           image: get_image(page),
           summary: get_summary(page),
+          homeworld: get_specific_data(page, 'Homeworld', 'Unknown'),
+          species: get_specific_data(page, 'Species', 'Probably Human'),
           external_uri: page.uri.to_s
         )
         affiliations.each { |a| c.affiliations << a }
