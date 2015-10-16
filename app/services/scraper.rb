@@ -1,4 +1,5 @@
 class Scraper
+  START_PAGE = 'http://starwars.wikia.com/wiki/Category:Individuals_by_faction'.freeze
   SELECTORS = {
     category_links: 'a.CategoryTreeLabel',
     article_links: '[class="mw-content-ltr"] a',
@@ -6,10 +7,10 @@ class Scraper
     image: '.infoboximage img',
     summary: '#mw-content-text > p'
   }.freeze
-  START_PAGE = 'http://starwars.wikia.com/wiki/Category:Individuals_by_faction'.freeze
 
   def initialize
     @agent = Mechanize.new { |a| a.user_agent_alias = 'Mac Safari' }
+    @affiliations = Affiliation.all
   end
 
   def scrape_on!
@@ -39,20 +40,35 @@ class Scraper
   end
 
   def get_image(page)
-    page.search(SELECTORS[:image]).first.try(:[], 'src')
+    src = page.search(SELECTORS[:image]).first.try(:[], 'src')
+    /http/.match(src) ? src : nil
   end
 
   def get_summary(page)
-    page.search(SELECTORS[:summary])[0...2].map { |p| p.text.chomp }.join("\n")
+    page.search(SELECTORS[:summary])[0...2].map { |p| p.text.gsub("\n", "") }.join("\n\n")
   end
 
   def create_character(page)
-    c = Character.create(
-      name: get_name(page),
-      image: get_image(page),
-      summary: get_summary(page),
-      external_uri: page.uri.to_s
-    )
-    puts c.name if c.persisted?
+    infobox = page.search('.infobox').first
+    if infobox.present?
+      affiliations = affiliation_match?(infobox.text)
+      if affiliations.present?
+        c = Character.create(
+          name: get_name(page),
+          image: get_image(page),
+          summary: get_summary(page),
+          external_uri: page.uri.to_s
+        )
+        affiliations.each { |a| c.affiliations << a }
+        puts c.name if c.persisted?
+      end
+    end
+  end
+
+  def affiliation_match?(text)
+    @affiliations.inject([]) do |arr, a|
+      arr.push(a) if text.match(/#{a.search_text}/i)
+      arr
+    end
   end
 end

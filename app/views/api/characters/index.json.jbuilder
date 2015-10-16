@@ -1,13 +1,10 @@
 json.characters do
-  json.array! @characters do |c|
-    json.image c.image
-    json.name c.name
-    json.homeworld c.homeworld
-    json.species c.species
-    json.summary c.summary
-    json.external_uri c.external_uri
-    json.affiliations do
-      json.array! c.affiliations.map(&:name)
-    end
+  json.array! @characters, :image, :name, :homeworld, :species, :summary, :external_uri
+end
+
+json.categories do
+  json.array! @affiliations do |a|
+    json.type a.name
+    json.display_value a.display_value
   end
 end
