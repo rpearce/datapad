@@ -6,5 +6,6 @@ json.categories do
   json.array! @affiliations do |a|
     json.type a.name
     json.display_value a.display_value
+    json.order a.order
   end
 end
